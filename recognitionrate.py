@@ -52,7 +52,7 @@ def face_detection_extraction(image, image_label):
         weight1 = 0.9  # Weight for descriptors lbp
         weight2 = 0.9  # Weight for descriptors hog
         weight3 = 0.2  # Weight for descriptors orb
-        weight4 = 0.9  # Weight for descriptors sift
+        weight4 = 0.2  # Weight for descriptors sift
             
         hog_descriptors = hog_extraction(extracted_face)
         try:  
@@ -114,65 +114,59 @@ def face_detection_extraction(image, image_label):
 
 def test_recognition_rate(test_directory):
     # Load the trained SVM classifier
-    classifier = joblib.load("3_without_orb_algo_zscore_on_svm_classifier_jaffe.joblib")
-    # classifier = joblib.load("3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
-    # classifier = joblib.load("test_3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
-
+    classifier = joblib.load("3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
+    # classifier = joblib.load("../3_train_without_orb_algo_zscore_on_svm_classifier_jaffedtrain.joblib")
     # Initialize lists to store predicted labels and ground truth labels
     predicted_labels = []
     ground_truth_labels = []
-
-    for dirname, _, filenames in os.walk(test_directory):
-        # print("< dir >", filenames )
+    # print(test_directory, "filename")
+    for dirname, _, filenames in os.walk(str(test_directory)):
+        # print(dirname)
         for filename in filenames:
-            # print("< dir filename >", filename)
+            img_name, img_extention = os.path.splitext(filename)
+            print(dirname, img_name, img_extention)
+            # print(dirname)
             # Load the test image
             image = cv2.imread(os.path.join(dirname, filename))
-            expression_label = (os.path.join(dirname, filename)).split(os.sep)[2]
-            # print(expression_label)
-            image = np.array(image)
-            expression_label = np.array(image)
+            # image = augmentation_seq(image=image)
+            # print("img ", image)
 
-            img_name, img_extention = os.path.splitext(filename)
-            # print((expression_label).shape)
-            if(image is not None and (img_extention == ".jpg" or img_extention == ".png")):
-                
-                # Apply data augmentation
-                image = augmentation_seq(image=image)
-
+            # if(img_extention == ".jpg" or img_extention == ".png"):
+            if (img_extention == ".jpg" or img_extention == ".png"):  # Check if the image is successfully loaded
                 # Extract features and predict label
+                # print(image, img_extention)
+                expression_label = (os.path.join(dirname, filename)).split(os.sep)[2]
                 features, features_label = face_detection_extraction(image, expression_label)
-                # print(features)
+                print(features)
                 if len(features) > 0:
-                    # Reshape the features
+                    # Reshape and preprocess the features
                     features = np.array(features)
-                    features_label = np.array(features_label)
-                    # features = features.reshape(features.shape[0], -1)
+                    features = features.reshape(features.shape[0], -1)
                     scaler = StandardScaler()
-                    # Preprocess the features
-                    # features = scaler.fit_transform(features)
+                    features = scaler.fit_transform(features)
 
                     # Predict the label using the trained classifier
                     predicted_label = classifier.predict(features)
-                    print(" predicted_label >> ", predicted_label)
 
                     # Append the predicted label and ground truth label
                     predicted_labels.append(predicted_label[0])
                     ground_truth_labels.append(dirname.split(os.sep)[-1])
+                else:
+                    print("Warning: No features extracted for image", filename)
 
-    # Calculate recognition rate metrics
+    # # Calculate recognition rate metrics
     accuracy = accuracy_score(ground_truth_labels, predicted_labels)
     precision = precision_score(ground_truth_labels, predicted_labels, average='macro', zero_division=1)
     recall = recall_score(ground_truth_labels, predicted_labels, average='macro', zero_division=1)
     f1 = f1_score(ground_truth_labels, predicted_labels, average='macro')
 
     # Print the recognition rate metrics
-    print("< Recognition Rate >")
     print("Accuracy:", accuracy)
     print("Precision:", precision)
     print("Recall:", recall)
     print("F1 Score:", f1)
+    print(ground_truth_labels, predicted_labels)
 
 # Test the recognition rate on the test dataset
-test_recognition_rate("./jaffedvalidate")
-# test_recognition_rate("./ckdvalidate")
+test_recognition_rate("./ckdvalidate")
+# test_recognition_rate("./jaffedvalidate")

@@ -173,7 +173,7 @@ def svmc(fused_features, img_labels, source_data_label):
     fused_features = imputer.fit_transform(fused_features)
 
     # Split the fused features data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(fused_features, img_labels, test_size=0.03, random_state=44)
+    X_train, X_test, y_train, y_test = train_test_split(fused_features, img_labels, test_size=0.025, random_state=44)
 
     # Create an SVM classifier
     # instantiate classifier with linear kernel and C=100
