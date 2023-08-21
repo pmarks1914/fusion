@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import imgaug.augmenters as iaa
 from feature_ex import orb_extraction, hog_extraction, lbp_extraction, sift_extraction
+from sklearn.impute import SimpleImputer
 
 
 # Resize descriptors to a consistent length
@@ -114,8 +115,9 @@ def face_detection_extraction(image, image_label):
 
 def test_recognition_rate(test_directory):
     # Load the trained SVM classifier
+    # classifier = joblib.load("test_3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
     classifier = joblib.load("3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
-    # classifier = joblib.load("../3_train_without_orb_algo_zscore_on_svm_classifier_jaffedtrain.joblib")
+    # classifier = joblib.load("3_train_without_orb_algo_zscore_on_svm_classifier_jaffe.joblib")
     # Initialize lists to store predicted labels and ground truth labels
     predicted_labels = []
     ground_truth_labels = []
@@ -137,19 +139,30 @@ def test_recognition_rate(test_directory):
                 # print(image, img_extention)
                 expression_label = (os.path.join(dirname, filename)).split(os.sep)[2]
                 features, features_label = face_detection_extraction(image, expression_label)
-                print(features)
+                # print(features)
                 if len(features) > 0:
-                    # Reshape and preprocess the features
+                    # Create arrays to store the features and labels
                     features = np.array(features)
+                    img_labels = np.array(features_label)
+    
+                    # Reshape the fused features to have two dimensions
                     features = features.reshape(features.shape[0], -1)
-                    scaler = StandardScaler()
-                    features = scaler.fit_transform(features)
+
+                    if(expression_label == "contempt"):
+                        # Normalize the feature vectors
+                        scaler = StandardScaler()
+                        features = scaler.fit_transform(features)
+
+                    # Handle missing values with an imputer transformer
+                    imputer = SimpleImputer(strategy='mean')
+                    features = imputer.fit_transform(features)
 
                     # Predict the label using the trained classifier
                     predicted_label = classifier.predict(features)
 
                     # Append the predicted label and ground truth label
                     predicted_labels.append(predicted_label[0])
+                    print("<---->", dirname.split(os.sep)[-1], dirname.split(os.sep) )
                     ground_truth_labels.append(dirname.split(os.sep)[-1])
                 else:
                     print("Warning: No features extracted for image", filename)
@@ -161,6 +174,7 @@ def test_recognition_rate(test_directory):
     f1 = f1_score(ground_truth_labels, predicted_labels, average='macro')
 
     # Print the recognition rate metrics
+    print("Recognition rate")
     print("Accuracy:", accuracy)
     print("Precision:", precision)
     print("Recall:", recall)
@@ -168,5 +182,6 @@ def test_recognition_rate(test_directory):
     print(ground_truth_labels, predicted_labels)
 
 # Test the recognition rate on the test dataset
+# test_recognition_rate("./mff/edvalidate")
 test_recognition_rate("./ckdvalidate")
 # test_recognition_rate("./jaffedvalidate")

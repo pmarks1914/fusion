@@ -147,7 +147,7 @@ def test_recognition_rate(test_directory):
                     # Reshape the features
                     features = np.array(features)
                     features_label = np.array(features_label)
-                    # features = features.reshape(features.shape[0], -1)
+                    features = features.reshape(features.shape[0], -1)
                     scaler = StandardScaler()
                     # Preprocess the features
                     # features = scaler.fit_transform(features)
@@ -172,7 +172,8 @@ def test_recognition_rate(test_directory):
     print("Precision:", precision)
     print("Recall:", recall)
     print("F1 Score:", f1)
+    print(ground_truth_labels, predicted_labels)
 
 # Test the recognition rate on the test dataset
-# test_recognition_rate("./jaffedvalidate")
-test_recognition_rate("./ckdvalidate")
+test_recognition_rate("./mff/edvalidate")
+# test_recognition_rate("./ckdvalidate")
