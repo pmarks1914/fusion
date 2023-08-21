@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import imgaug.augmenters as iaa
 from feature_ex import orb_extraction, hog_extraction, lbp_extraction, sift_extraction
+from sklearn.impute import SimpleImputer
 
 
 # Resize descriptors to a consistent length
@@ -122,43 +123,50 @@ def test_recognition_rate(test_directory):
     predicted_labels = []
     ground_truth_labels = []
 
-    for dirname, _, filenames in os.walk(test_directory):
-        # print("< dir >", filenames )
+    for dirname, _, filenames in os.walk(str(test_directory)):
+        # print(dirname)
         for filename in filenames:
-            # print("< dir filename >", filename)
+            img_name, img_extention = os.path.splitext(filename)
+            print(dirname, img_name, img_extention)
+            # print(dirname)
             # Load the test image
             image = cv2.imread(os.path.join(dirname, filename))
-            expression_label = (os.path.join(dirname, filename)).split(os.sep)[2]
-            # print(expression_label)
-            image = np.array(image)
-            expression_label = np.array(image)
+            # image = augmentation_seq(image=image)
+            # print("img ", image)
 
-            img_name, img_extention = os.path.splitext(filename)
-            # print((expression_label).shape)
-            if(image is not None and (img_extention == ".jpg" or img_extention == ".png")):
-                
-                # Apply data augmentation
-                image = augmentation_seq(image=image)
-
+            # if(img_extention == ".jpg" or img_extention == ".png"):
+            if (img_extention == ".jpg" or img_extention == ".png"):  # Check if the image is successfully loaded
                 # Extract features and predict label
+                # print(image, img_extention)
+                expression_label = (os.path.join(dirname, filename)).split(os.sep)[2]
                 features, features_label = face_detection_extraction(image, expression_label)
                 # print(features)
                 if len(features) > 0:
-                    # Reshape the features
+                    # Create arrays to store the features and labels
                     features = np.array(features)
-                    features_label = np.array(features_label)
+                    img_labels = np.array(features_label)
+    
+                    # Reshape the fused features to have two dimensions
                     features = features.reshape(features.shape[0], -1)
-                    scaler = StandardScaler()
-                    # Preprocess the features
-                    # features = scaler.fit_transform(features)
+
+                    if(expression_label == "happy"):
+                        # Normalize the feature vectors
+                        scaler = StandardScaler()
+                        features = scaler.fit_transform(features)
+
+                    # Handle missing values with an imputer transformer
+                    imputer = SimpleImputer(strategy='mean')
+                    features = imputer.fit_transform(features)
 
                     # Predict the label using the trained classifier
                     predicted_label = classifier.predict(features)
-                    print(" predicted_label >> ", predicted_label)
 
                     # Append the predicted label and ground truth label
                     predicted_labels.append(predicted_label[0])
+                    print("<---->", dirname.split(os.sep)[-1], dirname.split(os.sep) )
                     ground_truth_labels.append(dirname.split(os.sep)[-1])
+                else:
+                    print("Warning: No features extracted for image", filename)
 
     # Calculate recognition rate metrics
     accuracy = accuracy_score(ground_truth_labels, predicted_labels)
@@ -175,5 +183,5 @@ def test_recognition_rate(test_directory):
     print(ground_truth_labels, predicted_labels)
 
 # Test the recognition rate on the test dataset
-test_recognition_rate("./mff/edvalidate")
-# test_recognition_rate("./ckdvalidate")
+# test_recognition_rate("./mff/edvalidate")
+test_recognition_rate("./jaffedvalidate")
