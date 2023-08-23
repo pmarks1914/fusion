@@ -18,13 +18,13 @@ desired_length = 1000
 
 augmentation_seq = iaa.Sequential([
     # iaa.Affine(rotate=(9, 10)),  # Rotate images by -10 to +10 degrees
-    iaa.Multiply((0.8, 1.0)),  # Multiply pixel values by a factor between 0.8 and 1.2
-    # iaa.GammaContrast(gamma=(2.0, 2.2)),  # Adjust gamma contrast between 0.8 and 1.2
-    # iaa.ElasticTransformation(alpha=50, sigma=5)  # Apply elastic transformations
+    iaa.Multiply((0.1, 1.0)),  # Multiply pixel values by a factor between 0.8 and 1.2
+    # iaa.GammaContrast(gamma=(0.5, 1.8)),  # Adjust gamma contrast between 0.8 and 1.2
+    # iaa.ElasticTransformation(alpha=50, sigma=5),  # Apply elastic transformations
     # iaa.Fliplr(),  # Flip images horizontally with a 50% chance
     # iaa.Multiply((0.8, 1.2)),  # Multiply pixel values by a factor between 0.8 and 1.2
     # iaa.GammaContrast(),  # Adjust gamma contrast between 0.8 and 1.2
-    # iaa.ElasticTransformation(alpha=50, sigma=5)  # Apply elastic transformations
+    # iaa.ElasticTransformation(alpha=50, sigma=5),  # Apply elastic transformations
     # iaa.Affine(rotate=(0, 10)),  # Rotate images by -10 to +10 degrees
     # iaa.GaussianBlur(sigma=(0, 1.0)),  # Apply Gaussian blur with a sigma between 0 and 1.0
     # iaa.AdditiveGaussianNoise(scale=(0, 0.05*255)),  # Add Gaussian noise with a scale of 0 to 0.05*255
@@ -115,9 +115,10 @@ def face_detection_extraction(image, image_label):
 
 def test_recognition_rate(test_directory):
     # Load the trained SVM classifier
-    classifier = joblib.load("3_without_orb_algo_zscore_on_svm_classifier_jaffe.joblib")
-    # classifier = joblib.load("3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
-    # classifier = joblib.load("test_3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
+    # SD
+    # classifier = joblib.load("sd_3_train_without_orb_algo_zscore_on_svm_classifier_jaffedtrain.joblib")
+    # SI 
+    classifier = joblib.load("si_3_train_without_orb_algo_zscore_on_svm_classifier_jaffedtrain.joblib")
 
     # Initialize lists to store predicted labels and ground truth labels
     predicted_labels = []
@@ -127,15 +128,18 @@ def test_recognition_rate(test_directory):
         # print(dirname)
         for filename in filenames:
             img_name, img_extention = os.path.splitext(filename)
-            print(dirname, img_name, img_extention)
+            # print(dirname, img_name, img_extention)
             # print(dirname)
             # Load the test image
             image = cv2.imread(os.path.join(dirname, filename))
-            # image = augmentation_seq(image=image)
+            # print(type(image))
             # print("img ", image)
 
             # if(img_extention == ".jpg" or img_extention == ".png"):
             if (img_extention == ".jpg" or img_extention == ".png"):  # Check if the image is successfully loaded
+                # augmented
+                # image = augmentation_seq(image=image)
+
                 # Extract features and predict label
                 # print(image, img_extention)
                 expression_label = (os.path.join(dirname, filename)).split(os.sep)[2]
@@ -148,11 +152,12 @@ def test_recognition_rate(test_directory):
     
                     # Reshape the fused features to have two dimensions
                     features = features.reshape(features.shape[0], -1)
+                    scaler = StandardScaler()
 
                     if(expression_label == "happy"):
                         # Normalize the feature vectors
-                        scaler = StandardScaler()
-                        features = scaler.fit_transform(features)
+                        # features = scaler.fit_transform(features)
+                        pass
 
                     # Handle missing values with an imputer transformer
                     imputer = SimpleImputer(strategy='mean')
@@ -183,5 +188,4 @@ def test_recognition_rate(test_directory):
     print(ground_truth_labels, predicted_labels)
 
 # Test the recognition rate on the test dataset
-# test_recognition_rate("./mff/edvalidate")
 test_recognition_rate("./jaffedvalidate")

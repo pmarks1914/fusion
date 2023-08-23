@@ -116,8 +116,9 @@ def face_detection_extraction(image, image_label):
 def test_recognition_rate(test_directory):
     # Load the trained SVM classifier
     # classifier = joblib.load("test_3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
-    classifier = joblib.load("3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
-    # classifier = joblib.load("3_train_without_orb_algo_zscore_on_svm_classifier_jaffe.joblib")
+    # classifier = joblib.load("3_without_orb_algo_zscore_on_ck_svm_classifier_ck.joblib")
+    # SI model
+    classifier = joblib.load("si_3_without_orb_algo_zscore_on_ck_svm_classifier_ckdtrain.joblib")
     # Initialize lists to store predicted labels and ground truth labels
     predicted_labels = []
     ground_truth_labels = []
@@ -182,6 +183,4 @@ def test_recognition_rate(test_directory):
     print(ground_truth_labels, predicted_labels)
 
 # Test the recognition rate on the test dataset
-# test_recognition_rate("./mff/edvalidate")
 test_recognition_rate("./ckdvalidate")
-# test_recognition_rate("./jaffedvalidate")
